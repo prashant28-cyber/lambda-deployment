@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+    environment {
+        AWS_REGION = "ap-south-1"
+        ECR_URL = "<746669195426.dkr.ecr.ap-south-1.amazonaws.com/lambda-container-repo>"
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/prashant28-cyber/lambda-deployment.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t lambda-image .'
+            }
+        }
+        stage('Push Image to ECR') {
+            steps {
+                sh 'docker tag lambda-image:latest $ECR_URL/lambda-image:latest'
+                sh 'aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_URL'
+                sh 'docker push $ECR_URL/lambda-image:latest'
+            }
+        }
+        stage('Deploy Lambda') {
+            steps {
+                sh 'aws lambda update-function-code --function-name LambdaFromECR --image-uri $ECR_URL/lambda-image:latest'
+            }
+        }
+    }
+}
