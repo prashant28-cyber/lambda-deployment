@@ -1,3 +1,2 @@
 boto3
-pymysql
-awswrangler
+psycopg2-binary
